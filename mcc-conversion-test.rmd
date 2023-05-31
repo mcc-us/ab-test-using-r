@@ -1,0 +1,169 @@
+## A/B testing for New Website Redesign
+#### Use and Explanation of Fisher's Exact Test
+
+By Matt Curcio
+
+### 1. Executive Summary
+
+This report discusses the current redesign of the landing page to determine if conversion rate is increased.
+
+1. The total number of observations is **n = 20,123** for this experiment. 
+
+    - The Conversion rate when exposed to the treatment was 11.44%.
+
+    - The Conversion rate when NOT exposed to the treatment page was 10.77%
+
+
+**First Intro. Sentence**: A proper A/B test has subjects that can be assigned to one treatment or another. The subject might be a person, a plant seed, a web visitor; the key is that the subject is exposed to the treatment. Ideally, subjects are randomized (assigned randomly) to treatments. In this way, you know that any difference between the treatment groups is due to one of two things:
+
+- The effect of the different treatments
+
+- Luck of the draw in which subjects are assigned to which treatments (i.e., the random assignment may have resulted in the naturally better-performing subjects being concentrated in A or B)
+
+### 2. Results 
+
+1. The new landing page redesign did not have any statistically significant change over the original landing page.
+
+1. I recommend that experimentation be continued to find a higher conversion rate.
+
+
+1. The Fisher's Exact Test is used to calculate the probability and the odds for this to occur.
+
+    - **The Probability of the two events being equivalent are < 2.2e-16**.
+
+    - **The Odds are on average 0.0156601 to 1 for this event to occur**. 
+
+
+###  B. Discussion
+
+**2 x 2 Contingency Table for Treatment Versus New Images**
+
+|                | Treatment-Yes | Treatment-No | Marginal Sums |
+| :------------- | ------------: | -----------: | ------------: |
+| **New_images-Yes** |          1151 |         8982 |         10133 |
+| **New_images-No**  |          8906 |         1084 |          9990 |
+|                |               |              |               |
+| Sums           |         10057 |        10066 |         20123 |
+
+
+1. **Treatment**  
+
+- `r 10057/20123*100` % of the 20,123 observations viewed the treatment page.
+- The conversion rate of the Treatment page is `r 1151/10057*100` %.
+
+---
+
+2. **NOT-Treatment**
+
+- `r 10066/20123*100` % of the 20,123 observations did NOT view the treatment page
+- The conversion rate of the Original page is `r 1084/10066*100` %.
+
+
+###  C. Results
+
+- Load Redesign Test Data
+
+```{r}
+library(readr)
+redesign <- read_csv("redesign.csv", 
+     col_types = cols(treatment = col_factor(levels = c("yes","no")), 
+                      new_images = col_factor(levels = c("yes","no")), 
+                      converted = col_factor(levels = c("0","1"))))
+# View(redesign)  
+```
+
+1. The summary below shows that there no missing values.
+
+2. Redesign test data
+
+    - "treatment" - The set of this categorical variable are {"yes","no"}
+    - "new_images" - The set of this categorical variable are {"yes","no"}
+    - "converted" - This discrete output variable is {"0","1"}. 
+        - "0" is NOT converted, "1" IS converted.
+    
+```{r}
+summary(redesign)
+```
+
+
+3. Filter dataset based on 2 x 2 input variables dsiplaying the number of conversions.
+
+
+```{r}
+redesign_TT = subset(redesign, treatment == "yes" & new_images == "yes" &
+                     converted == "1")
+#nrow(redesign_TT)
+
+redesign_TF = subset(redesign, treatment == "yes" & new_images == "no" &
+                     converted == "0")
+#nrow(redesign_TF)
+
+redesign_FT = subset(redesign, treatment == "no" & new_images == "yes" &
+                     converted == "0")
+#nrow(redesign_FT)
+
+redesign_FF = subset(redesign, treatment == "no" & new_images == "no" &
+                     converted == "1")
+#nrow(redesign_FF)
+```
+
+
+    - `r nrow(redesign_TT)` observations for Treatment=Yes, New Images=Yes, and Converted=Yes.
+
+    - `r nrow(redesign_TF)` observations for Treatment=Yes, New Images=No, and Converted=NO
+
+    - `r nrow(redesign_FT)` observations for Treatment=No, New Images=Yes, and Converted=Yes.
+
+    - `r nrow(redesign_FF)` observations for Treatment=No, New Images=No, and Converted=NO
+
+4. Conversion Ratio
+
+    - The conversion rate of the Treatment page is `r 1151/10057*100` %.
+
+    - The conversion rate of the Original page is `r 1084/10066*100` %.
+
+5. Create 2x2 Contingency table
+
+```{r}
+Contingency_table <- data.frame("Treatment_Yes" = c(1151, 8982),
+                                "Treatment_No" = c(8906, 1084),
+                                row.names = c("New images-Yes", "New images-No"),
+                                stringsAsFactors = FALSE)
+
+colnames(Contingency_table) <- c("Treatment_Yes", "Treatment_No")
+
+Contingency_table
+```
+
+6. Mosaic plot of Conversion testing
+
+```{r}
+mosaicplot(Contingency_table,
+           main = "Mosaic plot",
+           color = TRUE
+           )
+```
+
+7. Fisher Exact Test
+
+```{r}
+f_test <- fisher.test(Contingency_table)
+f_test
+```
+
+8. P-value for Fisher's test
+
+    - From the Fisher's Exact Test output and specifically from the test$p.value we see that the p-value (Pr < 2.2e-16) is much less than the significance level of 1% for a two-tailed test. 
+
+    - ODDS??
+    
+###  3. Conclusion
+
+From the Fisher's Exact Test output and specifically from the test$p.value we see that the p-value (< 2.2e-16) is much less than the significance level of 1% for a two-tailed test. 
+
+In statistical testing, if the p-value is less than the significance level, 
+**we can reject the null hypothesis**. 
+
+In this circumstance, rejecting the null hypothesis for the Fisher’s exact test of independence means that there is a NO significant relationship between the two categorical variables (Treatments and New Images). 
+
+
